@@ -15,7 +15,20 @@ With competition math getting tougher and tougher each year, it's becoming far m
 ```
 
 # Clone bot
-If you want to host your own clone of the bot, make a new application on Discord's development portal. Check that you have Python installed and install all necessary modules with pip install (module_name). 
+If you want to host your own clone of the bot, make a new application on Discord's development portal. Check that you have Python installed and install all necessary modules with pip install (module_name).
+
+```
+Current module list:
+python-dotenv (referred to as dotenv in the actual code)
+pillow (referred to as PIL in the actual code)
+discord (if this doesn't work, import discord.py too)
+asyncio
+aiofiles
+aiohttp
+bs4
+urllib3
+sympy
+```
 
 Make a .env file and store your Discord token and PageSpeed Insights key in there. For more information, check out: https://developers.google.com/speed/docs/insights/v5/get-started and https://www.writebots.com/discord-bot-token/
 
@@ -24,7 +37,7 @@ Run main.py and the bot should come online
 # Future Plans
 Make leaderboard scrollable 
 
-Make bot accept numerical answer too
+Make bot accept numerical answer too (difficult with questions with text in answer choice)
 
 Use machine learning to create completely new questions based on existing ones
 
