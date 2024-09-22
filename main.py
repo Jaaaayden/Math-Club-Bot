@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 from discord import Intents, Client, Message, app_commands
+from discord.ui import Button, View
 from responses import get_response
 from leaderboard import update_leaderboard, restart_leaderboard, add_new_members_leaderboard
 from times_answered import update_times_answered, restart_times_answered    
@@ -69,24 +70,54 @@ async def problem(interaction) -> None:
         embed.set_image(url="attachment://image.png") 
         await interaction.response.send_message(embed=embed, file=file)
 
-@tree.command(name = "reset_leaderboard", description = "Full reset of leaderboard (unrestorable)", guild=discord.Object(id=1017633440184664226))
-@app_commands.check(is_admin)
-async def reset_leaderboard(interaction):
-    members = sorted( # GPT helped with accessing all members for reset functionality
-        (m for m in interaction.guild.members if not m.bot),  
-        key=lambda m: m.joined_at  
-    )   
-    await restart_leaderboard(members) # resets global leaderboard (add confirm functionality soon)
-    embed = discord.Embed(
-        title = f"reset successful",
-        description = f"(unless the leaderboard broke)"
+class ConfirmResetView(View):
+    def __init__(self, members):
+        super().__init__(timeout=30)  # timeout after 30 seconds if no response
+        self.members = members
+        self.value = None
+
+    @discord.ui.button(label="Yes", style=discord.ButtonStyle.danger)
+    async def confirm(self, interaction: discord.Interaction, button: Button):
+        await restart_leaderboard(self.members)  # proceed with the reset
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="Reset Successful",
+                description="The leaderboard has been reset."
+            ),
+            ephemeral=True
         )
-    await interaction.response.send_message(embed = embed, ephemeral = True)
-    
+        self.value = True
+        self.stop()  # stop listening for interactions
+
+    @discord.ui.button(label="No", style=discord.ButtonStyle.secondary)
+    async def cancel(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.send_message("Leaderboard reset canceled.", ephemeral=True)
+        self.value = False
+        self.stop()  # stop listening for interactions
+
+@tree.command(name="reset_leaderboard", description="Full reset of leaderboard (unrestorable)", guild=discord.Object(id=1017633440184664226))
+@app_commands.check(is_admin)
+async def reset_leaderboard(interaction: discord.Interaction):
+    members = sorted(
+        (m for m in interaction.guild.members if not m.bot),
+        key=lambda m: m.joined_at
+    )
+
+    embed = discord.Embed(
+        title="Confirm Leaderboard Reset",
+        description="Are you sure you want to reset the leaderboard? This action is **unrestorable**."
+    )
+
+    view = ConfirmResetView(members)
+
+    await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+    await view.wait()
+
 @reset_leaderboard.error
 async def reset_leaderboard_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
     if isinstance(error, app_commands.CheckFailure):
-        await interaction.response.send_message("You do not have permission to run this command.", ephemeral = True)
+        await interaction.response.send_message("You do not have permission to run this command.", ephemeral=True)
         
 @tree.command(name = "reset_problem", description = "Full reset of attempts count & roles (do every problem)", guild=discord.Object(id=1017633440184664226))
 @app_commands.check(is_admin) 
@@ -157,26 +188,38 @@ async def answer(interaction, answer_choice: str) -> None:
     await update_times_answered(username)
     await interaction.response.send_message(embed = embed)
     
-@tree.command(name = "view_leaderboard", description = "Leaderboard for POTD", guild=discord.Object(id=1017633440184664226))
+@tree.command(name="view_leaderboard", description="Leaderboard for POTD", guild=discord.Object(id=1017633440184664226))
 async def view_leaderboard(interaction):
     async with aiofiles.open('global_leaderboard.txt', 'r') as file:
         all_users = await file.readlines()
-    first = all_users[0].strip() 
-    second = all_users[1].strip()
-    third = all_users[2].strip()
-    fourth = all_users[3].strip()
-    fifth = all_users[4].strip()
+
+    all_users = [user.strip() for user in all_users]  
+    leaderboard = [user.split(" ") for user in all_users]  
     
+    top_5 = leaderboard[:5]
+
+    user_entry = None
+    for i, user in enumerate(leaderboard):
+        if user[0] == str(interaction.user):
+            user_entry = (i + 1, user)  # store the user's rank and details
+            break
+
     embed = discord.Embed(
-        title = f"POTD Top 5",
-        description = f"If you're on here Chris owes you $100 \n"
-        f"1st: {first}\n"
-        f"2nd: {second}\n"
-        f"3rd: {third}\n"
-        f"4th: {fourth}\n"
-        f"5th: {fifth}\n"
+        title="POTD Top 5",
+        description="If you're on here, Chris owes you $100\n"
     )
-    await interaction.response.send_message(embed = embed)
+    
+    for rank, user in enumerate(top_5, start=1):
+        embed.add_field(name=f"{rank}st", value=f"{user[0]}: {user[1]} points", inline=False)
+
+    # show the interaction user's rank and points as the 6th user
+    rank, (username, points) = user_entry
+    embed.add_field(
+        name=f"{rank}th (You)",
+        value=f"{username}: {points} points",
+        inline=False
+    )
+    await interaction.response.send_message(embed=embed)
     
 @tree.command(name = "add_new_members", description = "Use this command when new members join to update leaderboard", guild=discord.Object(id=1017633440184664226))
 async def add_new_members(interaction):
