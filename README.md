@@ -16,16 +16,21 @@ With competition math getting tougher and tougher each year, it's becoming far m
 
 # Clone bot
 If you want to host your own clone of the bot, make a new application on Discord's development portal. Check that you have Python installed and install all necessary modules with pip install (module_name). 
+
 Make a .env file and store your Discord token and PageSpeed Insights key in there. For more information, check out: https://developers.google.com/speed/docs/insights/v5/get-started and https://www.writebots.com/discord-bot-token/
+
 Run main.py and the bot should come online
 
 # Future Plans
-Make leaderboard scrollable
+Make leaderboard scrollable 
+
 Make bot accept numerical answer too
+
 Use machine learning to create completely new questions based on existing ones
 
 # Credits
 This project was developed with the help of discord.py API and PageSpeed Insights API
+
 Huge thanks to https://pylexnodes.net/ for providing free hosting for the bot 24/7
  
 
