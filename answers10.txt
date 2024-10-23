@@ -667,7 +667,6 @@ C
 B
 D
 C
-B
 A
 D
 D
@@ -693,6 +692,7 @@ B
 D
 E
 D
+B
 C
 A
 C
