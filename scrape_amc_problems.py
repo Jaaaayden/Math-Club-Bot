@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 import urllib.request
 import random
-    
-# issue with pulling answers from AMC 12 -- .txt modified manually
+
 def scrape_amc_problems(url, version): # code from youtube tutorial on web scraping: https://youtu.be/LC9yE7T93cs?si=MUecCEbKP-lDsD5Q
     r = urllib.request.urlopen(url).read()
     soup = BeautifulSoup(r, 'lxml')
@@ -35,6 +34,7 @@ def scrape_amc_problems(url, version): # code from youtube tutorial on web scrap
     # print(actual_problems)
     
     count: int = 0 # 2015 AMC 10A Problems/Problem 20 has an issue where the problem was incorrectly displayed and needs to be added independently
+    # 2012 AMC 12B Problems/Problem 12 -- same issue
     with open(f'answers{version}.txt', 'w') as file:
         for link in answer_links:
             r2 = urllib.request.urlopen(link).read()
@@ -48,8 +48,10 @@ def scrape_amc_problems(url, version): # code from youtube tutorial on web scrap
             for li in list_items:
                 if (len(li.get_text().strip()) == 1):
                     answer_text = li.get_text().strip()
-                    if (count == 669):
+                    if (count == 694 and version == "10"):
                         file.write(f"B\n{answer_text}\n")
+                    if (count == 511 and version == "12"):
+                        file.write(f"D\n{answer_text}\n")
                     else:
                         file.write(f"{answer_text}\n")
                     count += 1
