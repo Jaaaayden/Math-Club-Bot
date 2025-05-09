@@ -15,8 +15,12 @@ import asyncio
 
 load_dotenv()
 
-async def take_picture(version):
-    rand_int = random.randint(0, 1149) # implemenatation from scrape_amc_problem
+async def take_picture(version, lower, upper):
+    set_index = random.randint(0, 25) 
+    
+    question_num = random.randint(lower, upper)
+    
+    rand_int = set_index * 25 + (question_num - 1)
     
     # code for reading specific lines from .txt file merged with async https://stackoverflow.com/questions/7523001/how-do-you-read-a-specific-line-of-a-text-file-in-python
     async with aiofiles.open(f'questions{version}.txt', 'r') as load_questions:

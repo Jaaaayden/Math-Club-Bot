@@ -55,9 +55,16 @@ async def update_leaderboard(username):
     else:
         leaderboard[username] = 1 - 2*(attempts[username])
     """
+    async with aiofiles.open('question.txt', 'r') as file:
+        temp = await file.readline()  # question.txt has two parts AMC version (10/12) & correct answer choice for question
+    temp = temp.strip()
+    version = temp[:2]
     
-    leaderboard[username] = leaderboard[username] + 6 - 2*(attempts_dict[username]) # new implementation uses only attempt count for point calculation
-        
+    if version == '10':
+        leaderboard[username] = leaderboard[username] + 6 - 2*(attempts_dict[username]) # new implementation uses only attempt count for point calculation
+    else:
+        leaderboard[username] = leaderboard[username] + 9 - 3*(attempts_dict[username]) # debug before adding implementation - 9/27/24
+         
     sorted_leaderboard = sorted(leaderboard.items(), key=lambda item: item[1], reverse=True) # sorting list by descending after modifying pts of user who got correct
 
     async with aiofiles.open('global_leaderboard.txt', 'w') as file: # rewriting new sorted list

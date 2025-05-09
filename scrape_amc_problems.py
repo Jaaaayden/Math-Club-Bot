@@ -1,7 +1,8 @@
 from bs4 import BeautifulSoup
 import urllib.request
 import random
-
+    
+# issue with pulling answers from AMC 12 -- .txt modified manually
 def scrape_amc_problems(url, version): # code from youtube tutorial on web scraping: https://youtu.be/LC9yE7T93cs?si=MUecCEbKP-lDsD5Q
     r = urllib.request.urlopen(url).read()
     soup = BeautifulSoup(r, 'lxml')
