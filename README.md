@@ -3,8 +3,7 @@ With competition math getting tougher and tougher each year, it's becoming far m
 
 # Usage
 ```
-!random amc_10  Generates a random AMC 10 question 
-!random amc_12  Generates a random AMC 12 question
+/amc_problem_generation Generates an AMC problem
 (~10s delay to take & save picture of problem but bot will respond when problem generation is complete)
 /problem  Displays the generated problem in an embed
 /answer  Takes an answer choice as an input and awards points for correct answer to question
@@ -35,7 +34,7 @@ Make a .env file and store your Discord token and PageSpeed Insights key in ther
 Run main.py and the bot should come online
 
 # Future Plans
-Make leaderboard scrollable 
+Make leaderboard scrollable (attempted but laggy)
 
 Make bot accept numerical answer too (difficult with questions with text in answer choice)
 
