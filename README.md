@@ -4,6 +4,7 @@ With competition math getting tougher and tougher each year, it's becoming far m
 # Usage
 ```
 /amc_problem_generation Generates an AMC problem
+/custom_problem_generation Generate a custom problem (just drop an image)
 (~10s delay to take & save picture of problem but bot will respond when problem generation is complete)
 /problem  Displays the generated problem in an embed
 /answer  Takes an answer choice as an input and awards points for correct answer to question
@@ -18,27 +19,17 @@ If you want to host your own clone of the bot, make a new application on Discord
 
 ```
 Current module list:
+discord.py
 python-dotenv (referred to as dotenv in the actual code)
 pillow (referred to as PIL in the actual code)
-discord (if this doesn't work, import discord.py too)
-asyncio
 aiofiles
-aiohttp
 bs4
-urllib3
-sympy
 ```
 
 Make a .env file and store your Discord token and PageSpeed Insights key in there. For more information, check out: https://developers.google.com/speed/docs/insights/v5/get-started and https://www.writebots.com/discord-bot-token/
 
 Run main.py and the bot should come online
 
-# Future Plans
-Make leaderboard scrollable (attempted but laggy)
-
-Make bot accept numerical answer too (difficult with questions with text in answer choice)
-
-Use machine learning to create completely new questions based on existing ones
 
 # Credits
 This project was developed with the help of discord.py API and PageSpeed Insights API
