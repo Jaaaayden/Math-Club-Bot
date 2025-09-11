@@ -12,7 +12,7 @@ def scrape_amc_problems(url, version): # code from youtube tutorial on web scrap
     answer_links = []
     actual_answers = []
     
-    for link in soup.find_all('a', href=True): # technically not necessary to scrape when links are similar but will help for addiitonal functionality in future
+    for link in soup.find_all('a', href=True):
         href = link['href']
         # print(href)
         if ((f"AMC_{version}A" in href or f"AMC_{version}B" in href) and "2024" not in href): # blank page for 2024

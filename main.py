@@ -20,8 +20,7 @@ intents.message_content = True
 intents.members = True
 
 client: Client = Client(intents=intents)
-tree = app_commands.CommandTree(client) # ask gpt if i can refer to these client/tree/intents in responses to make commands there
-# or actually why not just move stuff from responses to here...
+tree = app_commands.CommandTree(client) 
 
 # message func
 async def send_message(message: Message, user_message: str, channel: str) -> None:
@@ -32,7 +31,7 @@ async def send_message(message: Message, user_message: str, channel: str) -> Non
     try:
         response: str = await get_response(user_message, channel)
         await message.channel.send(response)
-    except Exception as e: # bad practice but it works
+    except Exception as e: # bad practice but will clean up exceptions soon
         print(e) # use logging later
         
 def is_admin(interaction: discord.Interaction) -> bool:
@@ -56,9 +55,9 @@ async def on_message(message: Message) -> None:
     await send_message(message, user_message, channel)
     
 @tree.command(name = "amc_problem_generation", description = "Generate an AMC problem and specify the version/difficulty", guild=discord.Object(id=1017633440184664226))
-@app_commands.check(is_admin) 
+# @app_commands.check(is_admin) 
 async def amc_problem_generation(interaction, version: str, lower: int, upper: int) -> None:
-    await interaction.response.defer()  # acknowledge the interaction to prevent timeout
+    await interaction.response.defer()
     await asyncio.create_task(take_picture(version, lower, upper)) # stops the function from getting blocked by running in separate thread
     async with aiofiles.open('order_answered.txt', 'w') as file: # clears order_answered because new problem generated
         pass
@@ -68,6 +67,35 @@ async def amc_problem_generation(interaction, version: str, lower: int, upper: i
         description = f"(hopefully)"
         )
     await interaction.followup.send(embed=embed)  # follow up after defer
+    
+@amc_problem_generation.error
+async def amc_problem_generation_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.CheckFailure):
+        await interaction.response.send_message("You do not have permission to run this command.", ephemeral = True)
+        
+@tree.command(name = "custom_problem_generation", description = "Create a custom problem with any difficulty/topic you want! Specify whether to input numeric or letter in description", guild=discord.Object(id=1017633440184664226))
+@app_commands.check(is_admin) 
+async def custom_problem_generation(interaction, answer: str, description: str, image: discord.Attachment, difficulty: str = None, topic: str = None) -> None:
+    difficulty = difficulty or "N/A" # learned or simply returns the first one that's true so this is just shorthand for if statement checking for none
+    topic = topic or "N/A"
+    
+    async with aiofiles.open('question.txt', 'w') as file:
+        await file.write(f"??-{answer}")
+    
+    embed = discord.Embed(
+        title = f"Question type: {topic}",
+        description = description
+    )
+    embed.add_field(name="Difficulty", value=difficulty, inline=True)
+    embed.add_field(name="Topic", value=topic, inline=True)
+    embed.set_image(url=image.url)
+    
+    await interaction.followup.send(embed=embed)
+    
+@custom_problem_generation.error
+async def custom_problem_generation_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.CheckFailure):
+        await interaction.response.send_message("You do not have permission to run this command.", ephemeral = True)
   
 @tree.command(name = "problem", description = "Displays problem generated", guild=discord.Object(id=1017633440184664226))
 async def problem(interaction) -> None:
@@ -252,7 +280,7 @@ async def add_new_members(interaction):
         description = f"(woohoo !!)"
         )
     await interaction.response.send_message(embed=embed, ephemeral=True)
-
+    
 def main() -> None:
     client.run(token = TOKEN)
 
