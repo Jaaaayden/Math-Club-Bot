@@ -3,6 +3,7 @@
 # import aiofiles
 
 # realized this should've been a command all along
+# this response function is no longer used
 
 async def get_response(user_input: str, channel: str) -> str:
     lowered: str = user_input.lower() # lowercase everything bc python is case-sensitive

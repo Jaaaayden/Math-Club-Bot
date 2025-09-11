@@ -1,4 +1,4 @@
-from typing import Final
+from typing import Final, Literal, Optional
 import os 
 from dotenv import load_dotenv
 import discord
@@ -13,6 +13,7 @@ import aiofiles
 import asyncio
 
 load_dotenv()
+
 TOKEN: Final[str] = os.getenv('DISCORD_TOKEN') # key
 
 intents: Intents = Intents.default()
@@ -27,19 +28,25 @@ async def send_message(message: Message, user_message: str, channel: str) -> Non
     if not user_message:
         print('(Message was empty because intents were not enabled)')
         return
-    
     try:
         response: str = await get_response(user_message, channel)
         await message.channel.send(response)
-    except Exception as e: # bad practice but will clean up exceptions soon
+    except Exception as e: 
         print(e) # use logging later
+        
+@tree.command(name = "sync", description = "Syncing command tree (don't use this command basically)", guild=discord.Object(id=1017633440184664226))
+async def sync(interaction: discord.Interaction):
+    if interaction.user.id == 814900193883455548:
+        await tree.sync(guild=discord.Object(id=1017633440184664226))
+        print("Command tree synced.")
+    else:
+        await interaction.response.send_message("don't use this command lmao")
         
 def is_admin(interaction: discord.Interaction) -> bool:
     return interaction.user.guild_permissions.administrator
-        
+
 @client.event
 async def on_ready() -> None:
-    await tree.sync(guild=discord.Object(id=1017633440184664226))
     print(f'{client.user} is now running!')
     
 @client.event
@@ -73,23 +80,24 @@ async def amc_problem_generation_error(interaction: discord.Interaction, error: 
     if isinstance(error, app_commands.CheckFailure):
         await interaction.response.send_message("You do not have permission to run this command.", ephemeral = True)
         
-@tree.command(name = "custom_problem_generation", description = "Create a custom problem with any difficulty/topic you want! Specify whether to input numeric or letter in description", guild=discord.Object(id=1017633440184664226))
-@app_commands.check(is_admin) 
-async def custom_problem_generation(interaction, answer: str, description: str, image: discord.Attachment, difficulty: str = None, topic: str = None) -> None:
-    difficulty = difficulty or "N/A" # learned or simply returns the first one that's true so this is just shorthand for if statement checking for none
-    topic = topic or "N/A"
+@tree.command(name = "custom_problem_generation", description = "Create custom problem with any difficulty/topic you want!", guild=discord.Object(id=1017633440184664226))
+# @app_commands.check(is_admin) 
+async def custom_problem_generation(interaction, answer: str, image: discord.Attachment) -> None:
+    await interaction.response.defer()
+    
+    async with aiofiles.open('order_answered.txt', 'w') as file: # clears order_answered because new problem generated
+        pass
     
     async with aiofiles.open('question.txt', 'w') as file:
         await file.write(f"??-{answer}")
+        
+    await image.save("question.jpg")
     
     embed = discord.Embed(
-        title = f"Question type: {topic}",
-        description = description
+        title = f"Problem generation successful",
+        description = f"(hopefully)"
     )
-    embed.add_field(name="Difficulty", value=difficulty, inline=True)
-    embed.add_field(name="Topic", value=topic, inline=True)
-    embed.set_image(url=image.url)
-    
+
     await interaction.followup.send(embed=embed)
     
 @custom_problem_generation.error
@@ -98,17 +106,23 @@ async def custom_problem_generation_error(interaction: discord.Interaction, erro
         await interaction.response.send_message("You do not have permission to run this command.", ephemeral = True)
   
 @tree.command(name = "problem", description = "Displays problem generated", guild=discord.Object(id=1017633440184664226))
-async def problem(interaction) -> None:
+async def problem(interaction, custom_description: str = None, difficulty: str = None, topic: str = None) -> None:
     async with aiofiles.open('question.txt', 'r') as file:
         temp = await file.readline()
     temp = temp.strip()
     text = temp[0:2]
     print(text)
+    
+    difficulty = difficulty or "N/A"
+    topic = topic or "N/A"
+    custom_description = custom_description or "Enter the answer choice for the top question using /answer"
 
     embed = discord.Embed(
         title = f"Question type: AMC_{text}",
-        description = f"Enter the answer choice for the top question using /answer"
+        description = f"{custom_description}"
         )
+    embed.add_field(name="Difficulty", value=difficulty, inline=True)
+    embed.add_field(name="Topic", value=topic, inline=True)
     
     with open('question.jpg', 'rb') as image_file:
         file = discord.File(image_file, filename="image.png")
@@ -204,7 +218,7 @@ async def answer(interaction, answer_choice: str) -> None:
     username = str(interaction.user)
     print(letter) # for debugging
 
-    if (answer_choice.upper() == letter): 
+    if (answer_choice.upper() == letter.upper()): 
         embed = discord.Embed(
             title = f"yep",
             description = f"you got it right :D"
@@ -280,9 +294,10 @@ async def add_new_members(interaction):
         description = f"(woohoo !!)"
         )
     await interaction.response.send_message(embed=embed, ephemeral=True)
-    
+
 def main() -> None:
     client.run(token = TOKEN)
 
 if __name__ == '__main__': 
     main()
+
